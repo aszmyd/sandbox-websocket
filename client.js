@@ -1,41 +1,54 @@
 ((root) => {
-    const logs = document.getElementById('logs');
     let wsConnection;
     let keepAliveCounter = 0;
+    const host = '192.168.50.14:8080';
 
-    const addLog = (message) => {
-        logs.innerText = logs.innerText + '\n' + message
-    };
+    const connectWebSocket = () => {
 
-    const connect = () => {
-        wsConnection = new WebSocket('ws://localhost:8080/', 'echo-protocol');
-        addLog('Connecting...');
+        const sendKeepAlive = () => {
+            keepAliveCounter++;
+            wsConnection.send(JSON.stringify({
+                type: 'client_alive',
+                count: keepAliveCounter
+            }))
+        };
+
+        wsConnection = new WebSocket(`ws://${host}/`, 'echo-protocol');
+        console.log('Connecting...');
         wsConnection.addEventListener('open', () => {
-            addLog('WebSocket opened');
+            console.log('WebSocket opened');
+            console.log('test');
             setInterval(() => {
                 sendKeepAlive();
             }, 1000);
         });
-        wsConnection.addEventListener('close', () => {
-            addLog('WebSocket closed!!!');
+        wsConnection.addEventListener('close', (e) => {
+            console.log('WebSocket closed!!!');
+            console.log(e);
         });
         wsConnection.addEventListener('error', () => {
-            addLog('WebSocket error!!!');
+            console.error('WebSocket error!!!');
         });
         wsConnection.addEventListener('message', (event) => {
-            addLog(`Received: ${event.data}`)
+            console.log(`Received: ${event.data}`)
         });
     };
 
-    const sendKeepAlive = () => {
-        keepAliveCounter++;
-        wsConnection.send(JSON.stringify({
-            type: 'client_alive',
-            count: keepAliveCounter
-        }))
+    const startRestTest = () => {
+
+        const sendRequest = () => {
+            keepAliveCounter++;
+            console.log('SEND ' + keepAliveCounter);
+            fetch(`http://${host}/rest`);
+        };
+
+        setInterval(() => {
+            sendRequest();
+        }, 1000)
     };
 
-    root.connect = connect;
+    root.connectWebSocket = connectWebSocket;
+    root.startRestTest = startRestTest;
 
 
 })(window);

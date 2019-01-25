@@ -5,12 +5,24 @@ var fs = require('fs');
 
 var server = http.createServer(function (request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
-    const filePath = request.url === '/' ? 'index.html' : request.url.replace(/^\//, '');
-    if (fs.existsSync(filePath)) {
-        response.writeHead(200, {'Content-Type': 'text/html'});
-        response.write(fs.readFileSync(filePath));
-    } else {
-        response.writeHead(404);
+    switch (request.url) {
+        case '/':
+            response.writeHead(200, {'Content-Type': 'text/html'});
+            response.write(fs.readFileSync('index.html'));
+            break;
+        case '/rest':
+            console.log((new Date()) + ' Got REST.');
+            response.write('OK');
+            break;
+        default:
+            const filePath = request.url.replace(/^\//, '');
+            if (fs.existsSync(filePath)) {
+                response.writeHead(200, {'Content-Type': 'text/html'});
+                response.write(fs.readFileSync(filePath));
+            } else {
+                response.writeHead(404);
+            }
+
     }
 
     response.end();
@@ -56,5 +68,7 @@ wsServer.on('request', function (request) {
     });
     connection.on('close', function (reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        console.log('Code: ', reasonCode);
+        console.log('Description: ', description);
     });
 });
